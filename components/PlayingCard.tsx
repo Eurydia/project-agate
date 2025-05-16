@@ -1,87 +1,34 @@
+import { CardSuits, PlayingCard } from "@/models/solitaire";
+import { getLabelFromCardRank } from "@/services/solitaire";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { FC, useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-type Suit = "hearts" | "diamonds" | "clubs" | "spades";
-type Rank =
-  | "A"
-  | "K"
-  | "Q"
-  | "J"
-  | "10"
-  | "9"
-  | "8"
-  | "7"
-  | "6"
-  | "5"
-  | "4"
-  | "3"
-  | "2";
-
-export type PlayingCard = {
-  id: string;
-  rank: Rank;
-  suit: Suit;
-};
-
-const suitIcon: Record<
-  Suit,
+const SUIT_ICON: Record<
+  CardSuits,
   keyof typeof MaterialCommunityIcons.glyphMap
 > = {
-  hearts: "cards-heart",
-  diamonds: "cards-diamond",
-  clubs: "cards-club",
-  spades: "cards-spade",
+  [CardSuits.HEARTS]: "cards-heart",
+  [CardSuits.DIAMONDS]: "cards-diamond",
+  [CardSuits.CLUBS]: "cards-club",
+  [CardSuits.SPADES]: "cards-spade",
 };
-
-const SUIT_COLOR: Record<Suit, string> = {
-  hearts: "#d22",
-  diamonds: "#d22",
-  clubs: "#000",
-  spades: "#000",
+const SUIT_COLOR: Record<CardSuits, string> = {
+  [CardSuits.HEARTS]: "#FF0000",
+  [CardSuits.DIAMONDS]: "#FF0000",
+  [CardSuits.CLUBS]: "#000000",
+  [CardSuits.SPADES]: "#000000",
 };
-
-type Props = {
-  item: PlayingCard;
-};
-export const PlayingCardFace: FC<Props> = ({ item }) => {
-  const color = useMemo(
-    () => SUIT_COLOR[item.suit],
-    [item.suit]
-  );
-
-  const suit = useMemo(
-    () => suitIcon[item.suit],
-    [item.suit]
-  );
-
-  return (
-    <View style={[styles.card, { width: 150 }]}>
-      <Text
-        style={[
-          styles.rankText,
-          { color, fontSize: 150 * 0.6 },
-        ]}
-      >
-        {item.rank}
-      </Text>
-      <MaterialCommunityIcons
-        name={suit}
-        style={[
-          styles.suitIcon,
-          { color, fontSize: 150 * 0.6 },
-        ]}
-      />
-    </View>
-  );
-};
-
-const BORDER_RADIUS = 12;
 
 const styles = StyleSheet.create({
   card: {
     aspectRatio: "63/88",
-    borderRadius: BORDER_RADIUS,
+    borderRadius: 12,
     backgroundColor: "#fff",
     userSelect: "none",
   },
@@ -90,10 +37,63 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     top: 0,
     left: 0,
+    fontSize: 90,
   },
   suitIcon: {
     position: "absolute",
     bottom: 0,
     right: 0,
+    fontSize: 90,
   },
 });
+
+type Props = {
+  card: PlayingCard;
+  onPress: () => void;
+};
+const PlayingCardFace_: FC<Props> = ({ card, onPress }) => {
+  const color = useMemo(
+    () => SUIT_COLOR[card.suit],
+    [card.suit]
+  );
+
+  const suit = useMemo(
+    () => SUIT_ICON[card.suit],
+    [card.suit]
+  );
+
+  const rank = useMemo(
+    () => getLabelFromCardRank(card.rank),
+    [card.rank]
+  );
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        backgroundColor: "#fff",
+        borderRadius: 12,
+      }}
+    >
+      <View style={styles.card}>
+        <Text style={[styles.rankText, { color }]}>
+          {rank}
+        </Text>
+        <MaterialCommunityIcons
+          name={suit}
+          style={[styles.suitIcon, { color }]}
+        />
+      </View>
+    </Pressable>
+  );
+};
+
+export const PlayingCardFace = React.memo(
+  PlayingCardFace_,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.card.suit === nextProps.card.suit &&
+      prevProps.card.rank === nextProps.card.rank
+    );
+  }
+);
